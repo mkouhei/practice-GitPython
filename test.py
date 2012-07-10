@@ -1,58 +1,34 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
-from git import *
+import sys
+import argparse
+from git import Git
+import git.repo.fun
+from git import Repo
 
-# see http://packages.python.org/GitPython/0.3.2/tutorial.html#tutorial-label
+prs = argparse.ArgumentParser(description='usage')
+prs.add_argument('-b', action='store_true', help='git init --bare')
+prs.add_argument('git_dir', action='store', help='To make and git init directory')
+args = prs.parse_args()
 
+try:
+    # Check argument
+    gdir = os.path.abspath(args.git_dir)
 
-repo = Repo(".")
+    # If not exist directory, make it.
+    if not os.path.isdir(gdir):
+        os.mkdir(gdir)
 
+    # If is not Git repository, git init
+    if not git.repo.fun.is_git_dir(gdir) and not git.repo.fun.is_git_dir(gdir + '/.git'):
+        # bare repository
+        if args.__dict__.get('b'):
+            repo = Repo.init(gdir, bare=True)
+        # local repository
+        else:
+            g = Git(gdir)
+            g.init()
 
-# bare repository check
-if repo.bare:
-    print(repo + " is bare")
-
-# bare repository init
-#repo = Repo.init("~/tmp/moge")
-#assert repo.bare == True
-
-# ro
-repo.config_reader()
-
-# w
-#repo.config_writer()
-
-# True: Changes not staged for commit
-if repo.is_dirty():
-    print("unstatged: " + str(repo.is_dirty()))
-
-# When untracked file
-if repo.untracked_files:
-    print("untracked: " + str(repo.untracked_files))
-    
-# git clone from repo
-# unable to use relative path
-if os.path.isdir('/tmp/dest-clone'):
-    cloned_repo = repo.clone('/tmp/dest-clone')
-
-# git init
-if not os.path.isdir('/tmp/dest-init'):
-    new_repo = repo.init('/tmp/dest-init')
-
-# archive to tarball
-#repo.archive(open('/tmp/test.tar', 'w'))
-
-#repo2 = Repo("/tmp/gitdb-test", odbt=GitDB)
-
-if repo.heads:
-    head = repo.head
-    master = head.reference
-    master.commit
-    print(head.name, master, master.commit)
-    head_ = repo.heads[0]
-    print(head_.name, head_.commit, head_.commit.hexsha)
-
-    log = master.log()
-    # first reflog entry
-    print(log[0])
-    # last reflog entry
-    print(log[-1])
+except RuntimeError as e:
+    sys.stderr.write("ERROR: %s\n" % e)
