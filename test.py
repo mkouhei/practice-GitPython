@@ -20,15 +20,30 @@ try:
     if not os.path.isdir(gdir):
         os.mkdir(gdir)
 
+    g = Git(gdir)
     # If is not Git repository, git init
     if not git.repo.fun.is_git_dir(gdir) and not git.repo.fun.is_git_dir(gdir + '/.git'):
         # bare repository
         if args.__dict__.get('b'):
             repo = Repo.init(gdir, bare=True)
-        # local repository
         else:
-            g = Git(gdir)
+            # local repository
             g.init()
+
+    repo = Repo(gdir)
+
+    # Make .gitignore
+    if not os.path.isfile(gdir + '/.gitignore'):
+        f = open(gdir + '/.gitignore', 'w')
+        f.write('')
+        f.close()
+
+    # git add .gitignore and commit
+    if repo.untracked_files or repo.is_dirty():
+        # git add
+        g.add('.gitignore')
+        # git commit
+        g.commit(m='First commit')
 
 except RuntimeError as e:
     sys.stderr.write("ERROR: %s\n" % e)
