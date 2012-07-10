@@ -17,33 +17,42 @@ try:
     gdir = os.path.abspath(args.git_dir)
 
     # If not exist directory, make it.
-    if not os.path.isdir(gdir):
-        os.mkdir(gdir)
+    if args.__dict__.get('b'):
+        if gdir.endswith('.git'):
+            dirpath = gdir
+        else:
+            dirpath = gdir + '.git'
+    else:
+        dirpath = gdir
 
-    g = Git(gdir)
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
+
+    g = Git(dirpath)
     # If is not Git repository, git init
-    if not git.repo.fun.is_git_dir(gdir) and not git.repo.fun.is_git_dir(gdir + '/.git'):
+    if not git.repo.fun.is_git_dir(dirpath):
+
         # bare repository
         if args.__dict__.get('b'):
-            repo = Repo.init(gdir, bare=True)
+            repo = Repo.init(dirpath, bare=True)
         else:
             # local repository
             g.init()
+            
+            repo = Repo(dirpath)
 
-    repo = Repo(gdir)
+            # Make .gitignore
+            if not os.path.isfile(dirpath + '/.gitignore'):
+                f = open(dirpath + '/.gitignore', 'w')
+                f.write('')
+                f.close()
 
-    # Make .gitignore
-    if not os.path.isfile(gdir + '/.gitignore'):
-        f = open(gdir + '/.gitignore', 'w')
-        f.write('')
-        f.close()
-
-    # git add .gitignore and commit
-    if repo.untracked_files or repo.is_dirty():
-        # git add
-        g.add('.gitignore')
-        # git commit
-        g.commit(m='First commit')
+            # git add .gitignore and first commit
+            if repo.untracked_files or repo.is_dirty():
+                # git add
+                g.add('.gitignore')
+                # git commit
+                g.commit(m='First commit')
 
 except RuntimeError as e:
     sys.stderr.write("ERROR: %s\n" % e)
