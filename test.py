@@ -5,7 +5,6 @@ import sys
 import argparse
 from git import Git
 import git.repo.fun
-from git import Repo
 
 prs = argparse.ArgumentParser(description='usage')
 prs.add_argument('-b', action='store_true', help='git init --bare')
@@ -34,13 +33,11 @@ try:
 
         # bare repository
         if args.__dict__.get('b'):
-            repo = Repo.init(dirpath, bare=True)
+            repo = g.init(dirpath, bare=True)
         else:
             # local repository
             g.init()
             
-            repo = Repo(dirpath)
-
             # Make .gitignore
             if not os.path.isfile(dirpath + '/.gitignore'):
                 f = open(dirpath + '/.gitignore', 'w')
@@ -48,7 +45,7 @@ try:
                 f.close()
 
             # git add .gitignore and first commit
-            if repo.untracked_files or repo.is_dirty():
+            if g.untracked_files or g.is_dirty():
                 # git add
                 g.add('.gitignore')
                 # git commit
